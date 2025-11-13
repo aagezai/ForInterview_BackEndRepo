@@ -1,0 +1,9 @@
+com\example\order\model\CustomerDto.class
+com\example\order\model\Order.class
+com\example\order\OrderServiceApplication.class
+com\example\order\web\OrderController.class
+com\example\order\service\OrderService.class
+com\example\order\client\CustomerClient.class
+com\example\order\model\OrderDetailsDto.class
+com\example\order\client\RestCustomerClient.class
+com\example\order\config\RestTemplateConfig.class

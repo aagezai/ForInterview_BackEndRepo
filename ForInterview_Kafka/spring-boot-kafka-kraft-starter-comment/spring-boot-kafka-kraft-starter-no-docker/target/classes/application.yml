@@ -1,0 +1,127 @@
+# =============================================
+# application.yml
+# =============================================
+# This is the main Spring Boot configuration file.
+# It defines:
+#   ✅ Server configuration (port)
+#   ✅ Spring Kafka properties (brokers, producer, consumer, streams)
+#   ✅ Application-level topic names
+# =============================================
+
+server:
+  # The HTTP port where your Spring Boot application runs
+  port: 8080
+
+spring:
+  application:
+    # Logical name of your app — appears in logs, metrics, etc.
+    name: kafka-kraft-starter
+
+  kafka:
+    # ============================================================
+    # Kafka connection settings
+    # ============================================================
+    # The bootstrap server(s) — address of your Kafka broker(s)
+    # If running locally, ensure Kafka is started on this port.
+    bootstrap-servers: 127.0.0.1:9092
+
+    # ============================================================
+    # Kafka Admin Client configuration
+    # ============================================================
+    admin:
+      # fail-fast=false → app startup won’t fail if broker temporarily unavailable
+      fail-fast: false
+      # How long admin operations (like creating topics) can take before timing out
+      operation-timeout: 60s
+
+    # ============================================================
+    # Kafka Producer configuration
+    # ============================================================
+    producer:
+      # Serializers: convert Java objects → bytes before sending to Kafka
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+
+      # acks=all → Leader waits for all replicas to acknowledge before success.
+      # Ensures durability and prevents data loss.
+      acks: all
+
+      # Transactional ID prefix → required for exactly-once semantics (EOS)
+      transaction-id-prefix: orders-tx-
+
+      properties:
+        # Idempotence ensures messages are delivered exactly once (no duplicates)
+        enable.idempotence: true
+
+        # Compression reduces message size and improves throughput (zstd is efficient)
+        compression.type: zstd
+
+        # Wait up to 10 ms to batch messages together for efficiency
+        linger.ms: 10
+
+        # Maximum batch size (in bytes) per partition
+        batch.size: 65536
+
+        # Number of retries for transient errors — max integer for reliability
+        retries: 2147483647
+
+        # Total time a record can remain in-flight before failure
+        delivery.timeout.ms: 120000
+
+        # Max concurrent requests per connection; set to ≤5 for EOS
+        max.in.flight.requests.per.connection: 5
+
+    # ============================================================
+    # Kafka Consumer configuration
+    # ============================================================
+    consumer:
+      # Consumer group name (used for offset tracking and load-balancing)
+      group-id: orders-workers
+
+      # Deserializers: convert bytes → Java objects when consuming messages
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+      # Disable auto-commit → manually acknowledge after successful processing
+      enable-auto-commit: false
+
+      # Start reading from the earliest offset when no committed offsets exist
+      auto-offset-reset: earliest
+
+      properties:
+        # Ensures consumer only reads committed transactions (for EOS)
+        isolation.level: read_committed
+
+        # Max number of records returned per poll
+        max.poll.records: 500
+
+        # Max time allowed between polls before consumer is considered dead
+        max.poll.interval.ms: 600000
+
+    # ============================================================
+    # Kafka Streams configuration
+    # ============================================================
+    streams:
+      # Unique identifier for your Kafka Streams application
+      application-id: orders-streams-app
+
+      properties:
+        # Enables exactly-once semantics for Kafka Streams
+        processing.guarantee: exactly_once_v2
+
+# ============================================================
+# Custom application properties
+# ============================================================
+# Defines topic names used throughout your app
+# These are injected into classes using @Value("${app.topics.orders}")
+# ============================================================
+app:
+  topics:
+    # Main topic for incoming order events
+    orders: orders
+
+    # Dead-letter queue (DLQ) for failed messages
+    orders_dlq: orders.dlq
+
+    # Enriched topic for processed/uppercase messages (from Streams)
+    orders_enriched: orders.enriched

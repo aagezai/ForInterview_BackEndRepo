@@ -1,0 +1,53 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: kafka-kraft-starter
+
+  kafka:
+    bootstrap-servers: 127.0.0.1:9092
+    admin:
+      fail-fast: false
+      operation-timeout: 60s
+      properties:
+        request.timeout.ms: 60000
+        default.api.timeout.ms: 60000
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        compression.type: zstd
+        linger.ms: 10
+        batch.size: 65536
+        retries: 2147483647
+        delivery.timeout.ms: 120000
+        max.in.flight.requests.per.connection: 5
+#      transaction-id-prefix: orders-tx-
+
+    consumer:
+      group-id: orders-workers
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+      properties:
+        isolation.level: read_committed
+        max.poll.records: 500
+        max.poll.interval.ms: 600000
+
+    streams:
+      application-id: orders-streams-app
+      properties:
+        processing.guarantee: exactly_once_v2
+        default.key.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+        default.value.serde: org.apache.kafka.common.serialization.Serdes$StringSerde
+
+app:
+  topics:
+    orders: orders
+    orders_dlq: orders.dlq
+    orders_enriched: orders.enriched
