@@ -1,8 +1,0 @@
-/target
-/.idea
-/.classpath
-/.project
-/.settings
-.mvn/
-!mvnw
-!mvnw.cmd
