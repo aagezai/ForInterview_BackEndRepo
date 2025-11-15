@@ -1,6 +1,0 @@
-com\example\demo\DemoApplication.class
-com\example\demo\service\CustomerService.class
-com\example\demo\controller\CustomerController.class
-com\example\demo\dto\CustomerRequest.class
-com\example\demo\model\Customer.class
-com\example\demo\repo\CustomerRepository.class
